@@ -1,8 +1,5 @@
 import React, { useLayoutEffect, useState } from 'react';
 
-
-
-
 function App() {
 
   const [elements, setElements] = useState([]);
@@ -26,7 +23,6 @@ function App() {
     elements.forEach(({ x1, y1, x2, y2, elementType, elementColor }) => {
 
       if (elementType === "line") {
-        console.log(elementColor)
         ctx.beginPath();
         ctx.lineJoin = "round"
         ctx.strokeStyle = elementColor;
@@ -38,7 +34,6 @@ function App() {
           ctx.lineTo(x1, y1);
           ctx.lineTo(x1, y2);
         }
-
         ctx.stroke();
       }
       else {
@@ -48,7 +43,6 @@ function App() {
         ctx.stroke();
       }
     })
-
   }, [elements, background])
 
 
@@ -81,7 +75,6 @@ function App() {
     elementsCopy[index] = updatedElement;
     setElements(elementsCopy);
 
-    console.log(clientX, clientY);
   };
 
   const handleMouseUp = (event) => {
@@ -163,7 +156,10 @@ function App() {
             htmlFor="rectangle"
           >Rectangle</label>
         </div>
+        <div>
         <input type="color" id="favcolor" name="favcolor" value="#ff0000" onChange={changeColor}></input>
+        <label htmlFor="favcolor">  Color</label>
+        </div>
         <input type="file"
           id="file-select"
           onChange={loadCanvasWithInputFile}
