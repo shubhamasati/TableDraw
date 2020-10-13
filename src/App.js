@@ -1,17 +1,12 @@
 import React, {useLayoutEffect, useState } from 'react';
 import rough from "roughjs/bundled/rough.esm";
 
-const generator = rough.generator();
-
-function drawElement(x1, y1, x2, y2, type) {
-  var roughElement = null;
-  if (type === "line") roughElement = generator.line(x1, y1, x2, y2);
-  else roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1);
-  return { x1, y1, x2, y2, roughElement };
-}
-
 function  saveToPng() {
-  window.location = document.getElementById("canvas").toDataURL('image/png');
+  const data = document.getElementById("canvas").toDataURL('image/png');
+  const anchor = document.createElement('a');
+  anchor.href = data;
+  anchor.download = 'image.png';
+  anchor.click();
 };
 
 function App() {
@@ -20,33 +15,60 @@ function App() {
   const [drawing, setDrawing] = useState(false);
   const [elementType, setElementType] = useState("line");
   const [background, setBackground] = useState(null);
+  const [elementColor, setColor] = useState('#000');
   
   useLayoutEffect(() => {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d")
-    
-    if (background != null) {
-      canvas.width = background.width;
-      canvas.height = background.height;
-    }
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    if (background != null) {
-      ctx.drawImage(background, 100, 100, background.width * .5, background.height* .5);
-    }
-    const roughCanvas = rough.canvas(canvas);
 
-    elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement))
+    // Checking if background is selected
+    if (background != null) {
+      ctx.drawImage(background, 100, 100, background.width, background.height);
+    }
+   
+    // rendering each element on canvas
+    elements.forEach( ({x1, y1, x2, y2, elementType, elementColor}) => {
+      
+      if (elementType === "line") {
+        console.log(elementColor)
+        ctx.beginPath();
+        ctx.lineJoin = "round"
+        ctx.strokeStyle = elementColor;
+
+        if ((x2 - x1) > (y2 - y1)) {
+          ctx.lineTo(x1, y1);
+          ctx.lineTo(x2, y1);
+        } else{
+          ctx.lineTo(x1, y1);
+          ctx.lineTo(x1, y2);
+        }
+        
+        ctx.stroke();
+      } 
+      else {
+        ctx.beginPath();
+        ctx.strokeStyle = elementColor;
+        ctx.rect(x1, y1, x2 - x1, y2 - y1);
+        ctx.stroke();
+      }
+    })
 
   }, [elements, background])
 
+
+  // called when mouse starts moving down
   const handleMouseDown = (event) => {
     setDrawing(true);
 
     const { clientX, clientY } = event;
-    const updatedElement = drawElement(clientX, clientY, clientX, clientY, elementType);
-    setElements(prevState => [...prevState, updatedElement])
+    const x1 = clientX;
+    const y1 = clientY;
+    const x2 = x1;
+    const y2 = y1;
+    const updatedElement = {x1, y1, x2, y2, elementType, elementColor};
+    setElements(prevState => [...prevState, updatedElement]);
 
   };
 
@@ -57,7 +79,9 @@ function App() {
 
     const index = elements.length - 1;
     const { x1, y1 } = elements[index];
-    const updatedElement = drawElement(x1, y1, clientX, clientY, elementType);
+    const x2 = clientX;
+    const y2 = clientY;
+    const updatedElement = {x1, y1, x2, y2, elementType, elementColor};
 
     const elementsCopy = [...elements];
     elementsCopy[index] = updatedElement;
@@ -82,6 +106,11 @@ function App() {
       setElementType("line");
     }
     img.src = url;
+  }
+
+  function changeColor(event) {
+    setColor(event.target.value);
+    
   }
 
   function loadCanvasWithInputFile(event) {
@@ -135,6 +164,7 @@ function App() {
             htmlFor="rectangle"
           >Rectangle</label>
         </div>
+        <input type="color" id="favcolor" name="favcolor" value="#ff0000" onChange={changeColor}></input>
         <input type="file"
           id="file-select"
           onChange={loadCanvasWithInputFile}
